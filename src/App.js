@@ -6,7 +6,15 @@ function App() {
   const [activeTab, setActiveTab] = useState('manual');
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-4">
+    <div className="min-h p-4 relative" style={{
+      backgroundImage: 'url(https://images.unsplash.com/photo-1596838132731-3301c3fd4317)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed'
+    }}>
+  <div className="absolute inset-0 bg-black opacity-50"></div>
+  <div className="relative z-10">
+    <div className="max-w-7xl mx-auto">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
           {/* Tab Navigation */}
