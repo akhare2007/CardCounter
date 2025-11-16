@@ -6,15 +6,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('manual');
   
   return (
-    <div className="min-h p-4 relative" style={{
-      backgroundImage: 'url(https://images.unsplash.com/photo-1596838132731-3301c3fd4317)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed'
-    }}>
-  <div className="absolute inset-0 bg-black opacity-50"></div>
-  <div className="relative z-10">
-    <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-4">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
           {/* Tab Navigation */}
@@ -399,33 +391,50 @@ const SimulationTab = () => {
       let basicBankroll = 0;
       let countingBankroll = 0;
       
-      for (let hand = 0; hand < handsPerSim; hand++) {
+      // Track how many hands we've played
+      let handsPlayed = 0;
+      
+      while (handsPlayed < handsPerSim) {
+        // Create a fresh shoe (2 decks)
         const deck = createDeck();
-        let index = 0;
+        let deckPosition = 0;
         let runningCount = 0;
         
-        // Count cards for counting strategy
-        for (let i = 0; i < 26; i++) { // Count first half of shoe
-          runningCount += cardValues[deck[i].rank];
+        // Play hands from this shoe until we hit the cut card (80% penetration)
+        const cutCard = 104 * 0.8; // Play until 80% of shoe is dealt
+        
+        while (deckPosition < cutCard && handsPlayed < handsPerSim) {
+          // Estimate cards needed per hand (average ~6 cards)
+          if (deckPosition + 10 > cutCard) break; // Not enough cards left
+          
+          // Count the next few cards we can see
+          const peekCards = Math.min(10, deck.length - deckPosition);
+          for (let i = 0; i < peekCards; i++) {
+            runningCount += cardValues[deck[deckPosition + i].rank];
+          }
+          
+          const cardsRemaining = 104 - deckPosition;
+          const trueCount = runningCount / (cardsRemaining / 52);
+          
+          // Determine bet size for card counting
+          let betSize = 1;
+          if (trueCount >= 5) betSize = 8;
+          else if (trueCount >= 4) betSize = 6;
+          else if (trueCount >= 3) betSize = 4;
+          else if (trueCount >= 2) betSize = 2;
+          
+          // Play hand with basic strategy (always bet 1 unit)
+          const basicResult = playHand(deck, deckPosition, 1);
+          basicBankroll += basicResult.profit;
+          
+          // Play hand with card counting (variable bet)
+          const countingResult = playHand(deck, deckPosition, betSize);
+          countingBankroll += countingResult.profit;
+          
+          // Update deck position and hand counter
+          deckPosition += basicResult.cardsUsed;
+          handsPlayed++;
         }
-        
-        const cardsRemaining = 104 - 26;
-        const trueCount = runningCount / (cardsRemaining / 52);
-        
-        // Determine bet size for card counting
-        let betSize = 1;
-        if (trueCount >= 5) betSize = 8;
-        else if (trueCount >= 4) betSize = 6;
-        else if (trueCount >= 3) betSize = 4;
-        else if (trueCount >= 2) betSize = 2;
-        
-        // Play hand with basic strategy (bet 1 unit)
-        const basicResult = playHand(deck, 26, 1);
-        basicBankroll += basicResult.profit;
-        
-        // Play hand with card counting (variable bet)
-        const countingResult = playHand(deck, 26, betSize);
-        countingBankroll += countingResult.profit;
       }
       
       basicResults.push(basicBankroll);
