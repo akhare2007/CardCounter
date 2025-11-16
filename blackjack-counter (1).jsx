@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Minus, Play, Pause, RotateCcw, BarChart3 } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
+import { TrendingUp, TrendingDown, Minus, Play, RotateCcw, BarChart3 } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
-export default () => {
+function App() {
   const [activeTab, setActiveTab] = useState('manual');
   
   return (
@@ -749,4 +749,6 @@ const SimulationTab = () => {
       )}
     </div>
   );
-};
+}
+
+export default App;
