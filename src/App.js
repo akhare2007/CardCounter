@@ -391,48 +391,56 @@ const SimulationTab = () => {
       let basicBankroll = 0;
       let countingBankroll = 0;
       
-      // Track how many hands we've played
       let handsPlayed = 0;
       
       while (handsPlayed < handsPerSim) {
-        // Create a fresh shoe (2 decks)
-        const deck = createDeck();
-        let deckPosition = 0;
+        // Create a fresh shoe for BASIC STRATEGY
+        const basicDeck = createDeck();
+        let basicPosition = 0;
+        
+        // Create a fresh shoe for CARD COUNTING
+        const countingDeck = createDeck();
+        let countingPosition = 0;
         let runningCount = 0;
         
-        // Play hands from this shoe until we hit the cut card (80% penetration)
-        const cutCard = 104 * 0.8; // Play until 80% of shoe is dealt
+        // Play hands from this shoe until 80% penetration
+        const cutCard = 104 * 0.8;
         
-        while (deckPosition < cutCard && handsPlayed < handsPerSim) {
-          // Estimate cards needed per hand (average ~6 cards)
-          if (deckPosition + 10 > cutCard) break; // Not enough cards left
+        while (basicPosition < cutCard && handsPlayed < handsPerSim) {
+          // Check if enough cards remain
+          if (basicPosition + 10 > 104 || countingPosition + 10 > 104) break;
           
-          // Count the next few cards we can see
-          const peekCards = Math.min(10, deck.length - deckPosition);
-          for (let i = 0; i < peekCards; i++) {
-            runningCount += cardValues[deck[deckPosition + i].rank];
-          }
+          // === BASIC STRATEGY (always bet 1 unit) ===
+          const basicResult = playHand(basicDeck, basicPosition, 1);
+          basicBankroll += basicResult.profit;
+          basicPosition += basicResult.cardsUsed;
           
-          const cardsRemaining = 104 - deckPosition;
-          const trueCount = runningCount / (cardsRemaining / 52);
+          // === CARD COUNTING STRATEGY ===
           
-          // Determine bet size for card counting
+          // Calculate true count BEFORE this hand
+          const cardsRemaining = 104 - countingPosition;
+          const decksRemaining = cardsRemaining / 52;
+          const trueCount = decksRemaining > 0 ? runningCount / decksRemaining : 0;
+          
+          // Determine bet size based on true count
           let betSize = 1;
           if (trueCount >= 5) betSize = 8;
           else if (trueCount >= 4) betSize = 6;
           else if (trueCount >= 3) betSize = 4;
           else if (trueCount >= 2) betSize = 2;
           
-          // Play hand with basic strategy (always bet 1 unit)
-          const basicResult = playHand(deck, deckPosition, 1);
-          basicBankroll += basicResult.profit;
-          
-          // Play hand with card counting (variable bet)
-          const countingResult = playHand(deck, deckPosition, betSize);
+          // Play the hand
+          const countingResult = playHand(countingDeck, countingPosition, betSize);
           countingBankroll += countingResult.profit;
           
-          // Update deck position and hand counter
-          deckPosition += basicResult.cardsUsed;
+          // NOW update the running count with the cards that were just dealt
+          for (let i = countingPosition; i < countingPosition + countingResult.cardsUsed; i++) {
+            if (i < countingDeck.length) {
+              runningCount += cardValues[countingDeck[i].rank];
+            }
+          }
+          
+          countingPosition += countingResult.cardsUsed;
           handsPlayed++;
         }
       }
